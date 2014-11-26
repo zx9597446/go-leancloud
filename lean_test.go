@@ -1,52 +1,89 @@
 package leancloud
 
 import (
+	"fmt"
+	"log"
+	"math/rand"
 	"net/http"
+	"testing"
+	"time"
 )
-import "testing"
+
+var cloud = &Cloud{}
 
 func init() {
-	Config.AppId = ""
-	Config.AppKey = ""
-	Config.MasterKey = ""
-	Config.UsingMaster = false
-	Config.SiteURL = "https://avoscloud.us"
-}
-
-func checkResult(r *LeancloudResult, t *testing.T, expectCode int) {
-	if r.StatusCode != expectCode {
-		t.Fatalf("checkResult failed: %d, %s", r.StatusCode, r.JSON)
+	log.SetFlags(log.Lshortfile)
+	cfg := Config{}
+	cfg.AppId = ""
+	cfg.AppKey = ""
+	cfg.MasterKey = ""
+	cfg.UsingMaster = true
+	cloud.Cfg = cfg
+	cloud.BeforeRequest = func(r *http.Request) *http.Request {
+		//data, _ := httputil.DumpRequestOut(r, true)
+		//log.Println(string(data))
+		return r
 	}
-	t.Log(r.JSON)
+	rand.Seed(time.Now().UnixNano())
 }
 
-func TestNewObject(t *testing.T) {
-	type testStruct struct {
-		Name string
-		Key  string
+func randString() string {
+	return fmt.Sprintf("abc%d", rand.Int())
+}
+
+func TestObject(t *testing.T) {
+	className := "NewClass"
+	o1 := NewObject(className)
+	o1.Set("key", "value")
+	r1, err := o1.Create(cloud, true)
+	if err != nil {
+		t.Fatal(r1, err)
 	}
-	jsn := makeJSON(testStruct{"name", "key"})
-	r := NewObject("testClass", jsn, "")
-	checkResult(r, t, http.StatusCreated)
+	if o1.ObjectId() == "" {
+		t.Fatal("null objectId")
+	}
+	o1.Set("updatekey", "updatevalue")
+	r2, err := o1.Update(cloud)
+	if err != nil {
+		t.Fatal(r2, err)
+	}
+	o2 := NewObject(className)
+	r3, err := o2.Fetch(cloud, o1.ObjectId(), "")
+	if err != nil {
+		t.Fatal(r3, err)
+	}
+	r4, err := o2.Delete(cloud)
+	if err != nil {
+		t.Fatal(r4, err)
+	}
 }
 
-func TestGetObject(t *testing.T) {
-	id := "544755c8e4b0327b4b90d3d7"
-	r := GetObject("testClass", id, "game", "")
-	checkResult(r, t, http.StatusOK)
+func TestUser(t *testing.T) {
+	u1 := NewUser()
+	email := fmt.Sprintf("%s@email.com", randString())
+	phone := fmt.Sprintf("138681898%0d", rand.Intn(99))
+	username := randString()
+	password := "password"
+	r1, err := u1.Register(cloud, username, password, email, phone)
+	if err != nil {
+		t.Fatal(r1, err)
+	}
+	r2, err := u1.Login(cloud, username, password)
+	if err != nil {
+		t.Fatal(r2, err)
+	}
 }
 
-func TestRegister(t *testing.T) {
-	//r := UserRegister("zhang", "sdee", "ade@123.com", "13348598764")
-	//checkResult(r, t, http.StatusCreated)
+func TestCQL(t *testing.T) {
+	r, err := cloud.CQL("select * from _User where username like 'abc%'")
+	if err != nil {
+		t.Fatal(err, r)
+	}
 }
 
-func TestLogin(t *testing.T) {
-	r := UserLogin("zhang", "sdee")
-	checkResult(r, t, http.StatusOK)
-}
-
-func TestGetUser(t *testing.T) {
-	r := GetUser("5448ba00e4b0882ddff5dbf2")
-	checkResult(r, t, http.StatusOK)
+func TestCloudFunction(t *testing.T) {
+	r, err := cloud.CloudFunction("syncDate", "")
+	if err != nil {
+		t.Fatal(err, r)
+	}
 }

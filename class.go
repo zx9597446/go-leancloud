@@ -4,29 +4,52 @@ import "net/url"
 
 const classBaseURL = "classes"
 
-func NewObject(className, jsonData, sessionToken string) *LeancloudResult {
-	return HttpPost(sessionToken, jsonData, classBaseURL, className)
+func (cloud *Cloud) makeClassURL(parts ...string) string {
+	return cloud.makeURLPrefix(classBaseURL, parts...)
 }
 
-func GetObject(className, objectId, include, sessionToken string) *LeancloudResult {
+func (cloud *Cloud) CreateObject(className, jsonData string) (*Result, error) {
+	return cloud.Post(cloud.makeClassURL(className), jsonData)
+}
+
+func (cloud *Cloud) GetObject(className, objectId, include string) (*Result, error) {
 	p := url.Values{}
 	p.Add("include", include)
-	return HttpGet(sessionToken, p, classBaseURL, className, objectId)
+	url := cloud.makeClassURL(className, objectId)
+	return cloud.Get(url, p)
 }
 
-func UpdateObject(className, objectId, jsonData, sessionToken string) *LeancloudResult {
-	return HttpPut(sessionToken, jsonData, classBaseURL, className, objectId)
+func (cloud *Cloud) GetObjectDirectly(location string) (*Result, error) {
+	return cloud.Get(location, nil)
 }
 
-func DeleteObject(className, objectId, sessionToken string) *LeancloudResult {
-	return HttpDelete(sessionToken, classBaseURL, className, objectId)
+func (cloud *Cloud) UpdateObject(className, objectId, jsonData string) (*Result, error) {
+	url := cloud.makeClassURL(className, objectId)
+	return cloud.Put(url, jsonData)
 }
 
-func QueryObject(className, where, limit, skip, order, sessionToken string) *LeancloudResult {
+func (cloud *Cloud) DeleteObject(className, objectId string) (*Result, error) {
+	url := cloud.makeClassURL(className, objectId)
+	return cloud.Delete(url)
+}
+
+func (cloud *Cloud) QueryObject(className, whereJson, limit, skip, order, keys string) (*Result, error) {
 	p := url.Values{}
-	p.Add("where", where)
-	p.Add("limit", limit)
-	p.Add("skip", skip)
-	p.Add("order", order)
-	return HttpGet(sessionToken, p, classBaseURL, className)
+	if whereJson != "" {
+		p.Add("where", whereJson)
+	}
+	if limit != "" {
+		p.Add("limit", limit)
+	}
+	if skip != "" {
+		p.Add("skip", skip)
+	}
+	if order != "" {
+		p.Add("order", order)
+	}
+	if keys != "" {
+		p.Add("keys", keys)
+	}
+	url := cloud.makeClassURL(className)
+	return cloud.Get(url, p)
 }

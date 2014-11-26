@@ -3,26 +3,51 @@ package leancloud
 import "net/url"
 
 const userBaseURL = "users"
+const userClass = "_User"
 
 type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
-	Phone    string `json:"mobilePhoneNumber"`
+	Object
 }
 
-func UserRegister(username, password, email, phone string) *LeancloudResult {
-	u := User{username, password, email, phone}
-	return HttpPost("", makeJSON(u), userBaseURL)
+func NewUser() *User {
+	o := NewObject(userClass)
+	return &User{*o}
 }
 
-func UserLogin(username, password string) *LeancloudResult {
+func (u *User) Register(cloud *Cloud, username, password, email, phone string) (*Result, error) {
+	u.Set("username", username)
+	u.Set("password", password)
+	u.Set("email", email)
+	u.Set("mobilePhoneNumber", phone)
+	url := cloud.makeURLPrefix(userBaseURL)
+	return cloud.Post(url, u.Encode())
+}
+
+func (u *User) Login(cloud *Cloud, username, password string) (*Result, error) {
 	p := url.Values{}
 	p.Add("username", username)
 	p.Add("password", password)
-	return HttpGet("", p, "login")
+	uri := cloud.makeURLPrefix("login")
+	r, err := cloud.Get(uri, p)
+	if err != nil {
+		return r, err
+	}
+	o, err := r.Decode(u.ClassName)
+	if err == nil {
+		u.Data = o.Data
+	}
+	return r, err
 }
 
-func GetUser(objectId string) *LeancloudResult {
-	return HttpGet("", url.Values{}, userBaseURL, objectId)
+func (u *User) Get(cloud *Cloud, objectId string) (*Result, error) {
+	url := cloud.makeURLPrefix(userBaseURL, objectId)
+	r, err := cloud.Get(url, nil)
+	if err != nil {
+		return r, err
+	}
+	u1, err := r.Decode(userClass)
+	if err == nil {
+		u.Data = u1.Data
+	}
+	return r, err
 }
