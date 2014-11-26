@@ -87,14 +87,6 @@ func (o *Object) Fetch(cloud *Cloud, objectId, include string) (*Result, error) 
 	return r, err
 }
 
-func (o *Object) CreatedAt() string {
-	return o.Get("createdAt").(string)
-}
-
-func (o *Object) UpdatedAt() string {
-	return o.Get("updatedAt").(string)
-}
-
 func (o *Object) ObjectId() string {
 	return o.Get("objectId").(string)
 }
