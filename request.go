@@ -67,7 +67,7 @@ func (cloud *Cloud) makeURLPrefix(prefix string, parts ...string) string {
 	return cloud.makeURL(tmp...)
 }
 
-func (cloud *Cloud) DoRequest(url, method, body string) (*Result, error) {
+func (cloud *Cloud) httpRequest(url, method, body string) (*Result, error) {
 	r, err := http.NewRequest(method, url, strings.NewReader(body))
 	if err != nil {
 		return nil, err
@@ -105,19 +105,19 @@ func (cloud *Cloud) DoRequest(url, method, body string) (*Result, error) {
 	return ret, nil
 }
 
-func (cloud *Cloud) Get(url string, param url.Values) (*Result, error) {
+func (cloud *Cloud) HttpGet(url string, param url.Values) (*Result, error) {
 	withQuery := fmt.Sprintf("%s?%s", url, param.Encode())
-	return cloud.DoRequest(withQuery, "GET", "")
+	return cloud.httpRequest(withQuery, "GET", "")
 }
 
-func (cloud *Cloud) Put(url, body string) (*Result, error) {
-	return cloud.DoRequest(url, "PUT", body)
+func (cloud *Cloud) HttpPut(url, body string) (*Result, error) {
+	return cloud.httpRequest(url, "PUT", body)
 }
 
-func (cloud *Cloud) Delete(url string) (*Result, error) {
-	return cloud.DoRequest(url, "DELETE", "")
+func (cloud *Cloud) HttpDelete(url string) (*Result, error) {
+	return cloud.httpRequest(url, "DELETE", "")
 }
 
-func (cloud *Cloud) Post(url, body string) (*Result, error) {
-	return cloud.DoRequest(url, "POST", body)
+func (cloud *Cloud) HttpPost(url, body string) (*Result, error) {
+	return cloud.httpRequest(url, "POST", body)
 }

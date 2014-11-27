@@ -1,7 +1,7 @@
 go-leancloud
 ============
 
-a leancloud go client library
+a [leancloud](https://leancloud.cn/) [REST API](https://leancloud.cn/docs/rest_api.html) client library for go
 
 doc
 ------------

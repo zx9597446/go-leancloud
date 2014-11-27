@@ -20,7 +20,7 @@ func (u *User) Register(cloud *Cloud, username, password, email, phone string) (
 	u.Set("email", email)
 	u.Set("mobilePhoneNumber", phone)
 	url := cloud.makeURLPrefix(userBaseURL)
-	return cloud.Post(url, u.Encode())
+	return cloud.HttpPost(url, u.Encode())
 }
 
 func (u *User) Login(cloud *Cloud, username, password string) (*Result, error) {
@@ -28,7 +28,7 @@ func (u *User) Login(cloud *Cloud, username, password string) (*Result, error) {
 	p.Add("username", username)
 	p.Add("password", password)
 	uri := cloud.makeURLPrefix("login")
-	r, err := cloud.Get(uri, p)
+	r, err := cloud.HttpGet(uri, p)
 	if err != nil {
 		return r, err
 	}
@@ -41,7 +41,7 @@ func (u *User) Login(cloud *Cloud, username, password string) (*Result, error) {
 
 func (u *User) Get(cloud *Cloud, objectId string) (*Result, error) {
 	url := cloud.makeURLPrefix(userBaseURL, objectId)
-	r, err := cloud.Get(url, nil)
+	r, err := cloud.HttpGet(url, nil)
 	if err != nil {
 		return r, err
 	}

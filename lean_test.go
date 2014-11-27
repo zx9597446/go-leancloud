@@ -13,10 +13,11 @@ var cloud = &Cloud{}
 
 func init() {
 	log.SetFlags(log.Lshortfile)
+
 	cfg := Config{}
-	cfg.AppId = ""
-	cfg.AppKey = ""
-	cfg.MasterKey = ""
+	cfg.AppId = "f2958kp338kzrqplvqnpr19uxep5lyy899378z1l23vy7o4b"
+	cfg.AppKey = "6v7vok13ngutbctp7eajtefknzkog96nz7zrja6749sgjpqt"
+	cfg.MasterKey = "8un20nhjkmuo5ohkkcbt0d71sf9mdpprg94gkjse1wicr8zk"
 	cfg.UsingMaster = true
 	cloud.Cfg = cfg
 	cloud.BeforeRequest = func(r *http.Request) *http.Request {
@@ -24,6 +25,7 @@ func init() {
 		//log.Println(string(data))
 		return r
 	}
+
 	rand.Seed(time.Now().UnixNano())
 }
 
@@ -58,10 +60,25 @@ func TestObject(t *testing.T) {
 	}
 }
 
+func TestDate(t *testing.T) {
+	className := "Class2"
+	o1 := NewObject(className)
+	d := FormatDate(time.Now())
+	o1.Set("key", d)
+	r1, err := o1.Create(cloud, true)
+	if err != nil {
+		t.Fatal(r1, err)
+	}
+	r2, err := o1.Delete(cloud)
+	if err != nil {
+		t.Fatal(r2, err)
+	}
+}
+
 func TestUser(t *testing.T) {
 	u1 := NewUser()
 	email := fmt.Sprintf("%s@email.com", randString())
-	phone := fmt.Sprintf("138681898%0d", rand.Intn(99))
+	phone := fmt.Sprintf("1386818%0d%0d", rand.Intn(99), rand.Intn(99))
 	username := randString()
 	password := "password"
 	r1, err := u1.Register(cloud, username, password, email, phone)
@@ -82,8 +99,12 @@ func TestCQL(t *testing.T) {
 }
 
 func TestCloudFunction(t *testing.T) {
-	r, err := cloud.CloudFunction("syncDate", "")
-	if err != nil {
-		t.Fatal(err, r)
-	}
+	//r, err := cloud.CloudFunction("syncDate", "")
+	//if err != nil {
+	//t.Fatal(err, r)
+	//}
+}
+
+func Test1(t *testing.T) {
+	//t.Fatal(time.Now().UTC().Format(time.RFC3339))
 }

@@ -3,7 +3,9 @@ package leancloud
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+	"time"
 )
 
 type Object struct {
@@ -21,7 +23,21 @@ func NewObject(className string) *Object {
 }
 
 func (o *Object) Decode(data string) error {
-	return json.Unmarshal([]byte(data), &o.Data)
+	err := json.Unmarshal([]byte(data), &o.Data)
+	if err == nil {
+		o.ConvertToDate("createdAt")
+		o.ConvertToDate("updatedAt")
+	}
+	return err
+}
+
+func (o *Object) ConvertToDate(key string) bool {
+	v, ok := o.Data[key]
+	if !ok {
+		return false
+	}
+	o.Data[key] = NewDate(v.(string))
+	return true
 }
 
 func (o *Object) Encode() string {
@@ -42,7 +58,7 @@ func (o *Object) Set(key string, value interface{}) {
 
 func (o *Object) Create(cloud *Cloud, fetchOnSave bool) (*Result, error) {
 	r, err := cloud.CreateObject(o.ClassName, o.Encode())
-	if !fetchOnSave {
+	if !fetchOnSave || err != nil {
 		return r, err
 	}
 	r, err = cloud.GetObjectDirectly(r.Location)
@@ -60,8 +76,6 @@ func (o *Object) Update(cloud *Cloud) (*Result, error) {
 	if o.ObjectId() == "" || o.ClassName == "" {
 		return nil, ErrNoClassOrNoObjectId
 	}
-	delete(o.Data, "createdAt")
-	delete(o.Data, "updatedAt")
 	return cloud.UpdateObject(o.ClassName, o.ObjectId(), o.Encode())
 }
 
@@ -89,6 +103,35 @@ func (o *Object) Fetch(cloud *Cloud, objectId, include string) (*Result, error) 
 
 func (o *Object) ObjectId() string {
 	return o.Get("objectId").(string)
+}
+
+func (o *Object) AsPointer() Pointer {
+	return NewPointer(o.ClassName, o.ObjectId())
+}
+
+func (o *Object) createdAt() Date {
+	return o.Get("createdAt").(Date)
+}
+
+func (o *Object) updatedAt() Date {
+	return o.Get("updatedAt").(Date)
+}
+
+type Date struct {
+	Type string `json:"__type"`
+	ISO  string `json:"iso"`
+}
+
+func NewDate(date string) Date {
+	return Date{"Date", date}
+}
+
+//iso 格式是以 ISO 8601 标准和毫秒级精度储存:YYYY-MM-DDTHH:MM:SS.MMMMZ
+func FormatDate(t time.Time) Date {
+	t1 := t.UTC()
+	s := fmt.Sprintf("%4d-%2d-%2dT%2d:%2d:%2d.%4dZ",
+		t1.Year(), t1.Month(), t1.Day(), t1.Hour(), t1.Minute(), t1.Second(), t1.Nanosecond()%1e6/1e3)
+	return Date{"Date", s}
 }
 
 type Pointer struct {
