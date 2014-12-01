@@ -15,9 +15,9 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 
 	cfg := Config{}
-	cfg.AppId = "f2958kp338kzrqplvqnpr19uxep5lyy899378z1l23vy7o4b"
-	cfg.AppKey = "6v7vok13ngutbctp7eajtefknzkog96nz7zrja6749sgjpqt"
-	cfg.MasterKey = "8un20nhjkmuo5ohkkcbt0d71sf9mdpprg94gkjse1wicr8zk"
+	cfg.AppId = ""
+	cfg.AppKey = ""
+	cfg.MasterKey = ""
 	cfg.UsingMaster = true
 	cloud.Cfg = cfg
 	cloud.BeforeRequest = func(r *http.Request) *http.Request {
