@@ -9,16 +9,14 @@ import (
 )
 
 type Object struct {
-	Data      map[string]interface{}
-	ClassName string
+	Data map[string]interface{}
 }
 
-var ErrNoClassOrNoObjectId = errors.New("no className or no objectId")
+var ErrNoObjectIdOrClassName = errors.New("no objectId or no class name")
 
-func NewObject(className string) *Object {
+func NewObject() *Object {
 	o := &Object{}
-	o.Data = make(map[string]interface{})
-	o.ClassName = className
+	o.Data = make(map[string]interface{}, 0)
 	return o
 }
 
@@ -56,8 +54,8 @@ func (o *Object) Set(key string, value interface{}) {
 	o.Data[key] = value
 }
 
-func (o *Object) Create(cloud *Cloud, fetchOnSave bool) (*Result, error) {
-	r, err := cloud.CreateObject(o.ClassName, o.Encode())
+func (o *Object) Create(cloud *Cloud, className string, fetchOnSave bool) (*Result, error) {
+	r, err := cloud.CreateObject(className, o.Encode())
 	if !fetchOnSave || err != nil {
 		return r, err
 	}
@@ -65,36 +63,36 @@ func (o *Object) Create(cloud *Cloud, fetchOnSave bool) (*Result, error) {
 	if err != nil {
 		return r, err
 	}
-	o1, err := r.Decode(o.ClassName)
+	o1, err := r.Decode()
 	if err == nil {
 		o.Data = o1.Data
 	}
 	return r, err
 }
 
-func (o *Object) Update(cloud *Cloud) (*Result, error) {
-	if o.ObjectId() == "" || o.ClassName == "" {
-		return nil, ErrNoClassOrNoObjectId
+func (o *Object) Update(cloud *Cloud, className string) (*Result, error) {
+	if o.ObjectId() == "" || className == "" {
+		return nil, ErrNoObjectIdOrClassName
 	}
-	return cloud.UpdateObject(o.ClassName, o.ObjectId(), o.Encode())
+	return cloud.UpdateObject(className, o.ObjectId(), o.Encode())
 }
 
-func (o *Object) Delete(cloud *Cloud) (*Result, error) {
-	if o.ObjectId() == "" || o.ClassName == "" {
-		return nil, ErrNoClassOrNoObjectId
+func (o *Object) Delete(cloud *Cloud, className string) (*Result, error) {
+	if o.ObjectId() == "" || className == "" {
+		return nil, ErrNoObjectIdOrClassName
 	}
-	return cloud.DeleteObject(o.ClassName, o.ObjectId())
+	return cloud.DeleteObject(className, o.ObjectId())
 }
 
-func (o *Object) Fetch(cloud *Cloud, objectId, include string) (*Result, error) {
-	if o.ClassName == "" || objectId == "" {
-		return nil, ErrNoClassOrNoObjectId
+func (o *Object) Fetch(cloud *Cloud, className, objectId, include string) (*Result, error) {
+	if className == "" || objectId == "" {
+		return nil, ErrNoObjectIdOrClassName
 	}
-	r, err := cloud.GetObject(o.ClassName, objectId, include)
+	r, err := cloud.GetObject(className, objectId, include)
 	if err != nil {
 		return r, err
 	}
-	o1, err := r.Decode(o.ClassName)
+	o1, err := r.Decode()
 	if err == nil {
 		o.Data = o1.Data
 	}
@@ -105,8 +103,30 @@ func (o *Object) ObjectId() string {
 	return o.Get("objectId").(string)
 }
 
-func (o *Object) AsPointer() Pointer {
-	return NewPointer(o.ClassName, o.ObjectId())
+func (o *Object) AsPointer(className string) Pointer {
+	return NewPointer(className, o.ObjectId())
+}
+
+func (o *Object) ResultsAsObjects() ([]*Object, error) {
+	results, ok := o.Data["results"]
+	if !ok {
+		return nil, errors.New("no such key `results`")
+	}
+	interfaces, ok := results.([]interface{})
+	if !ok {
+		return nil, errors.New("convert to []interface{} failed")
+	}
+	objects := make([]*Object, 0)
+	for _, v := range interfaces {
+		o := NewObject()
+		data, ok := v.(map[string]interface{})
+		if !ok {
+			return nil, errors.New("convert to map[string]interface{} failed")
+		}
+		o.Data = data
+		objects = append(objects, o)
+	}
+	return objects, nil
 }
 
 func (o *Object) createdAt() Date {

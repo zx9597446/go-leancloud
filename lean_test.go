@@ -35,9 +35,9 @@ func randString() string {
 
 func TestObject(t *testing.T) {
 	className := "NewClass"
-	o1 := NewObject(className)
+	o1 := NewObject()
 	o1.Set("key", "value")
-	r1, err := o1.Create(cloud, true)
+	r1, err := o1.Create(cloud, className, true)
 	if err != nil {
 		t.Fatal(r1, err)
 	}
@@ -45,16 +45,16 @@ func TestObject(t *testing.T) {
 		t.Fatal("null objectId")
 	}
 	o1.Set("updatekey", "updatevalue")
-	r2, err := o1.Update(cloud)
+	r2, err := o1.Update(cloud, className)
 	if err != nil {
 		t.Fatal(r2, err)
 	}
-	o2 := NewObject(className)
-	r3, err := o2.Fetch(cloud, o1.ObjectId(), "")
+	o2 := NewObject()
+	r3, err := o2.Fetch(cloud, className, o1.ObjectId(), "")
 	if err != nil {
 		t.Fatal(r3, err)
 	}
-	r4, err := o2.Delete(cloud)
+	r4, err := o2.Delete(cloud, className)
 	if err != nil {
 		t.Fatal(r4, err)
 	}
@@ -62,14 +62,14 @@ func TestObject(t *testing.T) {
 
 func TestDate(t *testing.T) {
 	className := "Class2"
-	o1 := NewObject(className)
+	o1 := NewObject()
 	d := FormatDate(time.Now())
 	o1.Set("key", d)
-	r1, err := o1.Create(cloud, true)
+	r1, err := o1.Create(cloud, className, true)
 	if err != nil {
 		t.Fatal(r1, err)
 	}
-	r2, err := o1.Delete(cloud)
+	r2, err := o1.Delete(cloud, className)
 	if err != nil {
 		t.Fatal(r2, err)
 	}

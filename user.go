@@ -10,7 +10,7 @@ type User struct {
 }
 
 func NewUser() *User {
-	o := NewObject(userClass)
+	o := NewObject()
 	return &User{*o}
 }
 
@@ -32,7 +32,7 @@ func (u *User) Login(cloud *Cloud, username, password string) (*Result, error) {
 	if err != nil {
 		return r, err
 	}
-	o, err := r.Decode(u.ClassName)
+	o, err := r.Decode()
 	if err == nil {
 		u.Data = o.Data
 	}
@@ -45,7 +45,7 @@ func (u *User) Get(cloud *Cloud, objectId string) (*Result, error) {
 	if err != nil {
 		return r, err
 	}
-	u1, err := r.Decode(userClass)
+	u1, err := r.Decode()
 	if err == nil {
 		u.Data = u1.Data
 	}
