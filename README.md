@@ -5,7 +5,7 @@ a [leancloud](https://leancloud.cn/) [REST API](https://leancloud.cn/docs/rest_a
 
 install
 ------------
-	`go get -u github.com/zx9597446/go-leancloud`
+	```go get -u github.com/zx9597446/go-leancloud```
 
 quick usage
 -----------
