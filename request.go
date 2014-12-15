@@ -25,10 +25,20 @@ type Config struct {
 }
 
 type Cloud struct {
-	Cfg                    Config
-	HeaderProduction       string
-	BeforeRequest          func(*http.Request) *http.Request
-	DisposableSessionToken string
+	Cfg              Config
+	HeaderProduction string
+	BeforeRequest    func(*http.Request) *http.Request
+	SessionToken     string
+}
+
+func (cloud *Cloud) Clone() *Cloud {
+	return &Cloud{cloud.Cfg, cloud.HeaderProduction, cloud.BeforeRequest, cloud.SessionToken}
+}
+
+func (cloud *Cloud) WithSessionToken(sessionToken string) *Cloud {
+	c := cloud.Clone()
+	c.SessionToken = sessionToken
+	return c
 }
 
 func (cloud *Cloud) makeSign() string {
@@ -74,8 +84,8 @@ func (cloud *Cloud) httpRequest(url, method, body string) (*Result, error) {
 	}
 	r.Header.Set("X-Avoscloud-Application-Id", cloud.Cfg.AppId)
 	r.Header.Set("X-AVOSCloud-Request-Sign", cloud.makeSign())
-	if cloud.DisposableSessionToken != "" {
-		r.Header.Set("X-AVOSCloud-Session-Token", cloud.DisposableSessionToken)
+	if cloud.SessionToken != "" {
+		r.Header.Set("X-AVOSCloud-Session-Token", cloud.SessionToken)
 	}
 	if cloud.HeaderProduction != "" {
 		r.Header.Set("X-AVOSCloud-Application-Production", cloud.HeaderProduction)
@@ -101,7 +111,6 @@ func (cloud *Cloud) httpRequest(url, method, body string) (*Result, error) {
 	if !ret.CheckStatusCode() {
 		return ret, errors.New(ret.Response)
 	}
-	cloud.DisposableSessionToken = ""
 	return ret, nil
 }
 
