@@ -1,13 +1,13 @@
 package leancloud
 
-func (cloud *Cloud) CallFunction(fn, jsonParam string) (*Result, error) {
+func (cloud *Client) callfunc(fn, jsonParam string) (*result, error) {
 	requestURL := cloud.makeURLPrefix("functions", fn)
-	r, err := cloud.HttpPost(requestURL, jsonParam)
+	r, err := cloud.httpPost(requestURL, jsonParam)
 	return r, err
 }
 
-func (cloud *Cloud) CallFunctionResultAsObject(fn, jsonParam string) (*Object, error) {
-	r, err := cloud.CallFunction(fn, jsonParam)
+func CallFunction(cloud *Client, fn, jsonParam string) (*Object, error) {
+	r, err := cloud.callfunc(fn, jsonParam)
 	if err != nil {
 		return nil, err
 	}

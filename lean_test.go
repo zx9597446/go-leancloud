@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var cloud = &Cloud{}
+var cloud = &Client{}
 
 func init() {
 	log.SetFlags(log.Lshortfile)
@@ -37,26 +37,25 @@ func TestObject(t *testing.T) {
 	className := "NewClass"
 	o1 := NewObject()
 	o1.Set("key", "value")
-	r1, err := o1.Create(cloud, className, true)
+	err := o1.Save(cloud, className, true)
 	if err != nil {
-		t.Fatal(r1, err)
+		t.Fatal(err)
 	}
 	if o1.ObjectId() == "" {
 		t.Fatal("null objectId")
 	}
 	o1.Set("updatekey", "updatevalue")
-	r2, err := o1.Update(cloud, className)
+	err = o1.Update(cloud, className)
 	if err != nil {
-		t.Fatal(r2, err)
+		t.Fatal(err)
 	}
-	o2 := NewObject()
-	r3, err := o2.Fetch(cloud, className, o1.ObjectId(), "")
+	o2, err := FetchObject(cloud, className, o1.ObjectId(), "")
 	if err != nil {
-		t.Fatal(r3, err)
+		t.Fatal(err)
 	}
-	r4, err := o2.Delete(cloud, className)
+	err = o2.Delete(cloud, className)
 	if err != nil {
-		t.Fatal(r4, err)
+		t.Fatal(err)
 	}
 }
 
@@ -65,13 +64,13 @@ func TestDate(t *testing.T) {
 	o1 := NewObject()
 	d := FormatDate(time.Now())
 	o1.Set("key", d)
-	r1, err := o1.Create(cloud, className, true)
+	err := o1.Save(cloud, className, true)
 	if err != nil {
-		t.Fatal(r1, err)
+		t.Fatal(err)
 	}
-	r2, err := o1.Delete(cloud, className)
+	err = o1.Delete(cloud, className)
 	if err != nil {
-		t.Fatal(r2, err)
+		t.Fatal(err)
 	}
 }
 
@@ -92,17 +91,17 @@ func TestUser(t *testing.T) {
 }
 
 func TestCQL(t *testing.T) {
-	r, err := cloud.CQL("select * from _User where username like 'abc%'")
+	r, err := CQL(cloud, "select * from _User where username like 'abc%'")
 	if err != nil {
 		t.Fatal(err, r)
 	}
 }
 
 func TestCloudFunction(t *testing.T) {
-	//r, err := cloud.CloudFunction("syncDate", "")
-	//if err != nil {
-	//t.Fatal(err, r)
-	//}
+	r, err := CallFunction(cloud, "syncDate", "")
+	if err != nil {
+		t.Fatal(err, r)
+	}
 }
 
 func Test1(t *testing.T) {

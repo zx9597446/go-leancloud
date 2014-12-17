@@ -20,6 +20,25 @@ func NewObject() *Object {
 	return o
 }
 
+func FetchObject(cloud *Client, className, objectId, include string) (*Object, error) {
+	if className == "" || objectId == "" {
+		return nil, ErrNoObjectIdOrClassName
+	}
+	r, err := cloud.getObject(className, objectId, include)
+	if err != nil {
+		return nil, err
+	}
+	return r.Decode()
+}
+
+func DeleteObject(cloud *Client, className, objectId string) error {
+	if objectId == "" || className == "" {
+		return ErrNoObjectIdOrClassName
+	}
+	_, err := cloud.deleteObject(className, objectId)
+	return err
+}
+
 func (o *Object) Decode(data string) error {
 	err := json.Unmarshal([]byte(data), &o.Data)
 	if err == nil {
@@ -54,49 +73,36 @@ func (o *Object) Set(key string, value interface{}) {
 	o.Data[key] = value
 }
 
-func (o *Object) Create(cloud *Cloud, className string, fetchOnSave bool) (*Result, error) {
-	r, err := cloud.CreateObject(className, o.Encode())
+func (o *Object) Save(cloud *Client, className string, fetchOnSave bool) error {
+	r, err := cloud.createObject(className, o.Encode())
 	if !fetchOnSave || err != nil {
-		return r, err
+		return err
 	}
-	r, err = cloud.GetObjectDirectly(r.Location)
+	r, err = cloud.getObjectDirectly(r.Location)
 	if err != nil {
-		return r, err
+		return err
 	}
 	o1, err := r.Decode()
 	if err == nil {
 		o.Data = o1.Data
 	}
-	return r, err
+	return err
 }
 
-func (o *Object) Update(cloud *Cloud, className string) (*Result, error) {
+func (o *Object) Update(cloud *Client, className string) error {
 	if o.ObjectId() == "" || className == "" {
-		return nil, ErrNoObjectIdOrClassName
+		return ErrNoObjectIdOrClassName
 	}
-	return cloud.UpdateObject(className, o.ObjectId(), o.Encode())
+	_, err := cloud.updateObject(className, o.ObjectId(), o.Encode())
+	return err
 }
 
-func (o *Object) Delete(cloud *Cloud, className string) (*Result, error) {
+func (o *Object) Delete(cloud *Client, className string) error {
 	if o.ObjectId() == "" || className == "" {
-		return nil, ErrNoObjectIdOrClassName
+		return ErrNoObjectIdOrClassName
 	}
-	return cloud.DeleteObject(className, o.ObjectId())
-}
-
-func (o *Object) Fetch(cloud *Cloud, className, objectId, include string) (*Result, error) {
-	if className == "" || objectId == "" {
-		return nil, ErrNoObjectIdOrClassName
-	}
-	r, err := cloud.GetObject(className, objectId, include)
-	if err != nil {
-		return r, err
-	}
-	o1, err := r.Decode()
-	if err == nil {
-		o.Data = o1.Data
-	}
-	return r, err
+	_, err := cloud.deleteObject(className, o.ObjectId())
+	return err
 }
 
 func (o *Object) ObjectId() string {
@@ -107,7 +113,7 @@ func (o *Object) AsPointer(className string) Pointer {
 	return NewPointer(className, o.ObjectId())
 }
 
-func (o *Object) ResultsAsObjects() ([]*Object, error) {
+func (o *Object) GetResults() ([]*Object, error) {
 	results, ok := o.Data["results"]
 	if !ok {
 		return nil, errors.New("no such key `results`")
@@ -129,11 +135,11 @@ func (o *Object) ResultsAsObjects() ([]*Object, error) {
 	return objects, nil
 }
 
-func (o *Object) createdAt() Date {
+func (o *Object) CreatedAt() Date {
 	return o.Get("createdAt").(Date)
 }
 
-func (o *Object) updatedAt() Date {
+func (o *Object) UpdatedAt() Date {
 	return o.Get("updatedAt").(Date)
 }
 

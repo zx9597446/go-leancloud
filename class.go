@@ -4,36 +4,36 @@ import "net/url"
 
 const classBaseURL = "classes"
 
-func (cloud *Cloud) makeClassURL(parts ...string) string {
+func (cloud *Client) makeClassURL(parts ...string) string {
 	return cloud.makeURLPrefix(classBaseURL, parts...)
 }
 
-func (cloud *Cloud) CreateObject(className, jsonData string) (*Result, error) {
-	return cloud.HttpPost(cloud.makeClassURL(className), jsonData)
+func (cloud *Client) createObject(className, jsonData string) (*result, error) {
+	return cloud.httpPost(cloud.makeClassURL(className), jsonData)
 }
 
-func (cloud *Cloud) GetObject(className, objectId, include string) (*Result, error) {
+func (cloud *Client) getObject(className, objectId, include string) (*result, error) {
 	p := url.Values{}
 	p.Add("include", include)
 	url := cloud.makeClassURL(className, objectId)
-	return cloud.HttpGet(url, p)
+	return cloud.httpGet(url, p)
 }
 
-func (cloud *Cloud) GetObjectDirectly(location string) (*Result, error) {
-	return cloud.HttpGet(location, nil)
+func (cloud *Client) getObjectDirectly(location string) (*result, error) {
+	return cloud.httpGet(location, nil)
 }
 
-func (cloud *Cloud) UpdateObject(className, objectId, jsonData string) (*Result, error) {
+func (cloud *Client) updateObject(className, objectId, jsonData string) (*result, error) {
 	url := cloud.makeClassURL(className, objectId)
-	return cloud.HttpPut(url, jsonData)
+	return cloud.httpPut(url, jsonData)
 }
 
-func (cloud *Cloud) DeleteObject(className, objectId string) (*Result, error) {
+func (cloud *Client) deleteObject(className, objectId string) (*result, error) {
 	url := cloud.makeClassURL(className, objectId)
-	return cloud.HttpDelete(url)
+	return cloud.httpDelete(url)
 }
 
-func (cloud *Cloud) QueryObject(className, whereJson, limit, skip, order, keys string) (*Result, error) {
+func (cloud *Client) queryObject(className, whereJson, limit, skip, order, keys string) (*result, error) {
 	p := url.Values{}
 	if whereJson != "" {
 		p.Add("where", whereJson)
@@ -51,5 +51,5 @@ func (cloud *Cloud) QueryObject(className, whereJson, limit, skip, order, keys s
 		p.Add("keys", keys)
 	}
 	url := cloud.makeClassURL(className)
-	return cloud.HttpGet(url, p)
+	return cloud.httpGet(url, p)
 }

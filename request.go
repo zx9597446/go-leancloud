@@ -24,24 +24,24 @@ type Config struct {
 	SiteURL     string
 }
 
-type Cloud struct {
+type Client struct {
 	Cfg              Config
 	HeaderProduction string
 	BeforeRequest    func(*http.Request) *http.Request
-	SessionToken     string
+	sessionToken     string
 }
 
-func (cloud *Cloud) Clone() *Cloud {
-	return &Cloud{cloud.Cfg, cloud.HeaderProduction, cloud.BeforeRequest, cloud.SessionToken}
+func (c *Client) WithSessionToken(token string) *Client {
+	ac := c.clone()
+	ac.sessionToken = token
+	return ac
 }
 
-func (cloud *Cloud) WithSessionToken(sessionToken string) *Cloud {
-	c := cloud.Clone()
-	c.SessionToken = sessionToken
-	return c
+func (cloud *Client) clone() *Client {
+	return &Client{cloud.Cfg, cloud.HeaderProduction, cloud.BeforeRequest, cloud.sessionToken}
 }
 
-func (cloud *Cloud) makeSign() string {
+func (cloud *Client) makeSign() string {
 	timestamp := strconv.Itoa(int(time.Now().Unix()))
 	sign := ""
 	if cloud.Cfg.UsingMaster {
@@ -53,7 +53,7 @@ func (cloud *Cloud) makeSign() string {
 	}
 }
 
-func (cloud *Cloud) makeURL(parts ...string) (url string) {
+func (cloud *Client) makeURL(parts ...string) (url string) {
 	var path string
 	if len(parts) == 0 {
 		log.Panicln("can not make url", parts)
@@ -70,23 +70,24 @@ func (cloud *Cloud) makeURL(parts ...string) (url string) {
 	return
 }
 
-func (cloud *Cloud) makeURLPrefix(prefix string, parts ...string) string {
+func (cloud *Client) makeURLPrefix(prefix string, parts ...string) string {
 	tmp := make([]string, 0)
 	tmp = append(tmp, prefix)
 	tmp = append(tmp, parts...)
 	return cloud.makeURL(tmp...)
 }
 
-func (cloud *Cloud) httpRequest(url, method, body string) (*Result, error) {
+func (cloud *Client) httpRequest(url, method, body string) (*result, error) {
 	r, err := http.NewRequest(method, url, strings.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
 	r.Header.Set("X-Avoscloud-Application-Id", cloud.Cfg.AppId)
 	r.Header.Set("X-AVOSCloud-Request-Sign", cloud.makeSign())
-	if cloud.SessionToken != "" {
-		r.Header.Set("X-AVOSCloud-Session-Token", cloud.SessionToken)
+	if cloud.sessionToken != "" {
+		r.Header.Set("X-AVOSCloud-Session-Token", cloud.sessionToken)
 	}
+	r.Header.Set("Content-Type", "application/json")
 	if cloud.HeaderProduction != "" {
 		r.Header.Set("X-AVOSCloud-Application-Production", cloud.HeaderProduction)
 	}
@@ -107,26 +108,26 @@ func (cloud *Cloud) httpRequest(url, method, body string) (*Result, error) {
 	if u, err := res.Location(); err == nil {
 		location = u.String()
 	}
-	ret := &Result{res.StatusCode, location, string(sbody)}
+	ret := &result{res.StatusCode, location, string(sbody)}
 	if !ret.CheckStatusCode() {
 		return ret, errors.New(ret.Response)
 	}
 	return ret, nil
 }
 
-func (cloud *Cloud) HttpGet(url string, param url.Values) (*Result, error) {
+func (cloud *Client) httpGet(url string, param url.Values) (*result, error) {
 	withQuery := fmt.Sprintf("%s?%s", url, param.Encode())
 	return cloud.httpRequest(withQuery, "GET", "")
 }
 
-func (cloud *Cloud) HttpPut(url, body string) (*Result, error) {
+func (cloud *Client) httpPut(url, body string) (*result, error) {
 	return cloud.httpRequest(url, "PUT", body)
 }
 
-func (cloud *Cloud) HttpDelete(url string) (*Result, error) {
+func (cloud *Client) httpDelete(url string) (*result, error) {
 	return cloud.httpRequest(url, "DELETE", "")
 }
 
-func (cloud *Cloud) HttpPost(url, body string) (*Result, error) {
+func (cloud *Client) httpPost(url, body string) (*result, error) {
 	return cloud.httpRequest(url, "POST", body)
 }

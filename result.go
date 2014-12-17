@@ -5,19 +5,19 @@ import (
 	"log"
 )
 
-type Result struct {
+type result struct {
 	StatusCode int
 	Location   string
 	Response   string
 }
 
-func (r *Result) Decode() (*Object, error) {
+func (r *result) Decode() (*Object, error) {
 	o := NewObject()
 	err := o.Decode(r.Response)
 	return o, err
 }
 
-func (r *Result) CheckStatusCode() bool {
+func (r *result) CheckStatusCode() bool {
 	return r.StatusCode >= 200 && r.StatusCode < 300
 }
 
