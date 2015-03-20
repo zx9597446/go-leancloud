@@ -15,9 +15,9 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 
 	cfg := Config{}
-	cfg.AppId = ""
-	cfg.AppKey = ""
-	cfg.MasterKey = ""
+	cfg.AppId = "3v3kh14wgd9hm45cf7w2pkql7wx1tpd9k5alz6hknia5b8y8"
+	cfg.AppKey = "aw0mp3eqfdh3cdxyxzjrrr9jrwhaa6231m894rz9x43j1unw"
+	cfg.MasterKey = "8w2an693p7jmrfuuuqyfgn9tqkcpukr1b1v6apjnbi8ztgzb"
 	cfg.UsingMaster = true
 	cloud.Cfg = cfg
 	cloud.BeforeRequest = func(r *http.Request) *http.Request {
@@ -78,6 +78,7 @@ func TestUser(t *testing.T) {
 	u1 := NewUser()
 	email := fmt.Sprintf("%s@email.com", randString())
 	phone := fmt.Sprintf("1386818%0d%0d", rand.Intn(99), rand.Intn(99))
+	t.Log(phone)
 	username := randString()
 	password := "password"
 	r1, err := u1.Register(cloud, username, password, email, phone)
