@@ -11,7 +11,7 @@ quick usage
 -----------
 1. config cloud:
 ```go
-cloud := &leancloud.Cloud{}
+cloud := &leancloud.Client{}
 cfg := leancloud.Config{}
 cfg.AppId = ""
 cfg.AppKey = ""
