@@ -135,6 +135,18 @@ func (o *Object) GetResults() ([]*Object, error) {
 	return objects, nil
 }
 
+func (o *Object) GetResultByIdx(idx int) (*Object, error) {
+	results, err := o.GetResults()
+	if err != nil {
+		return nil, err
+	}
+	if len(results) <= idx {
+		msg := fmt.Sprintf("index %d out of range %d", idx, len(results))
+		return nil, errors.New(msg)
+	}
+	return results[idx], nil
+}
+
 func (o *Object) CreatedAt() Date {
 	return o.Get("createdAt").(Date)
 }

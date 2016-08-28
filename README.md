@@ -26,16 +26,16 @@ className := "TestClass"
 o := leancloud.NewObject()
 o.Set("key", "value")
 fetchOnSave := true
-o.Create(client, className, fetchOnSave)
+o.Save(client, className, fetchOnSave)
 
 o.Set("newKey", "newValue")
 o.Update(client, className)
+o.Delete(client, className)
 
-o2 := leancloud.NewObject()
-oid := o.ObjectId()
-o2.Fetch(client, className, oid, "")
+obj, err := leancloud.FetchObject(client, className, objectId, include)
 
-o2.Delete(client, className)
+leancloud.DeleteObject(client, className, objectId)
+
 ```
 
 3. call leancloud function:
@@ -47,7 +47,15 @@ ret, err := leancloud.CallFunction(client, "functionName", param.Encode())
 
 4. execute CQL:
 ```go
-ret, err := leancloud.CQL(client, "select * from _User where username like 'abc%' limit 1")
+//ret is a map["result"]={obj1, obj2...}
+ret, err := leancloud.CQLf(client, "select * from _User where username like '%s' limit 1", "abc")
+
+//to retrive all objects in ret, using this:
+objects, err := ret.GetResults()
+
+//to retrive one single object in ret, using this:
+object, err := ret.GetResultByIdx(idx)
+
 ```
 
 5. call leancloud function(or object CRUD) with SessionToken:
